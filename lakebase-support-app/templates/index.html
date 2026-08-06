@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Support Ticket System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .ticket-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .ticket-item {
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ticket-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ticket-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2d3748;
+        }
+
+        .ticket-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-open {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-in_progress {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .status-resolved {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .status-closed {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        /* Priority badges */
+        .priority-low {
+            background: #e6f7ff;
+            color: #0066cc;
+        }
+
+        .priority-medium {
+            background: #fff4e6;
+            color: #d97706;
+        }
+
+        .priority-high {
+            background: #ffe6e6;
+            color: #dc2626;
+        }
+
+        .priority-critical {
+            background: #fce4ec;
+            color: #b91c50;
+            font-weight: 700;
+            border: 2px solid #b91c50;
+        }
+
+        /* Category badges */
+        .category-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .category-general {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .category-access {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .category-cluster {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .category-support {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .category-billing {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .category-other {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        /* Badge container */
+        .ticket-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ticket-meta {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .messages-list {
+            margin-top: 20px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            background: #f7fafc;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .message-author {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .message-time {
+            color: #718096;
+        }
+
+        .message-text {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            margin-bottom: 20px;
+        }
+
+        .status-update {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎫 AI Support Ticket System</h1>
+            <p>Powered by Databricks Lakebase</p>
+        </div>
+
+        <!-- Create Ticket Form -->
+        <div id="createTicketSection" class="card">
+            <h2 style="margin-bottom: 20px; color: #2d3748;">Create New Ticket</h2>
+            <div id="createError" class="error hidden"></div>
+            <div id="createSuccess" class="success hidden"></div>
+            <form id="createTicketForm">
+                <div class="form-group">
+                    <label for="ticketTitle">Ticket Title *</label>
+                    <input type="text" id="ticketTitle" required placeholder="Brief description of your issue">
+                </div>
+                <div class="form-group">
+                    <label for="ticketMessage">Initial Message *</label>
+                    <textarea id="ticketMessage" rows="4" required placeholder="Detailed description of your issue"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ticketPriority">Priority *</label>
+                    <select id="ticketPriority" required>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ticketCategory">Category *</label>
+                    <select id="ticketCategory" required>
+                        <option value="general" selected>General</option>
+                        <option value="access">Access</option>
+                        <option value="cluster">Cluster</option>
+                        <option value="support">Support</option>
+                        <option value="billing">Billing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success">Create Ticket</button>
+            </form>
+        </div>
+
+        <!-- Tickets List View -->
+        <div id="ticketsListSection" class="card">
+            <h2 style="margin-bottom: 20px; color: #2d3748;">All Support Tickets</h2>
+            <div id="ticketsLoading" class="loading">Loading tickets...</div>
+            <div id="ticketsList" class="ticket-list hidden"></div>
+        </div>
+
+        <!-- Single Ticket View -->
+        <div id="ticketDetailSection" class="card hidden">
+            <button class="btn btn-secondary back-btn" onclick="showTicketsList()">← Back to All Tickets</button>
+            <div id="ticketDetailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTickets = [];
+
+        // Load all tickets on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTickets();
+        });
+
+        // Create ticket form submission
+        document.getElementById('createTicketForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('ticketTitle').value.trim();
+            const message = document.getElementById('ticketMessage').value.trim();
+            const priority = document.getElementById('ticketPriority').value;
+            const category = document.getElementById('ticketCategory').value;
+            
+            const errorDiv = document.getElementById('createError');
+            const successDiv = document.getElementById('createSuccess');
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/tickets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, message, priority, category })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create ticket');
+                }
+                
+                successDiv.textContent = `Ticket #${data.ticket_id} created successfully!`;
+                successDiv.classList.remove('hidden');
+                
+                // Reset form
+                document.getElementById('createTicketForm').reset();
+                
+                // Reload tickets
+                await loadTickets();
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => successDiv.classList.add('hidden'), 3000);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        async function loadTickets() {
+            const loadingDiv = document.getElementById('ticketsLoading');
+            const listDiv = document.getElementById('ticketsList');
+            const statusFilter = document.getElementById('statusFilter')?.value || '';
+            
+            loadingDiv.classList.remove('hidden');
+            listDiv.classList.add('hidden');
+            
+            try {
+                const url = statusFilter ? `/tickets?status=${statusFilter}` : '/tickets';
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load tickets');
+                
+                currentTickets = await response.json();
+                
+                if (currentTickets.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align: center; color: #718096;">No tickets found.</p>';
+                } else {
+                    listDiv.innerHTML = currentTickets.map(ticket => `
+                        <div class="ticket-item" onclick="showTicketDetail('${ticket.ticket_id}')">
+                            <div class="ticket-header">
+                                <div class="ticket-title">#${ticket.ticket_id} - ${escapeHtml(ticket.title)}</div>
+                                <div class="ticket-badges">
+                                    <span class="ticket-status status-${ticket.status}">${ticket.status.replace('_', ' ')}</span>
+                                    <span class="ticket-status priority-${ticket.priority}">${ticket.priority}</span>
+                                    <span class="category-badge category-${ticket.category}">${ticket.category}</span>
+                                </div>
+                            </div>
+                            <div class="ticket-meta">
+                                Created by ${escapeHtml(ticket.created_by)} • 
+                                ${formatDate(ticket.created_at)} • 
+                                ${ticket.message_count} message(s)
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                loadingDiv.classList.add('hidden');
+                listDiv.classList.remove('hidden');
+            } catch (error) {
+                loadingDiv.innerHTML = `<p style="color: #c53030;">Error loading tickets: ${error.message}</p>`;
+            }
+        }
+
+        async function showTicketDetail(ticketId) {
+            const detailSection = document.getElementById('ticketDetailSection');
+            const listSection = document.getElementById('ticketsListSection');
+            const contentDiv = document.getElementById('ticketDetailContent');
+            
+            contentDiv.innerHTML = '<div class="loading">Loading ticket details...</div>';
+            listSection.classList.add('hidden');
+            detailSection.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`/tickets/${ticketId}`);
+                if (!response.ok) throw new Error('Failed to load ticket details');
+                
+                const ticket = await response.json();
+                
+                contentDiv.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <h2 style="color: #2d3748; margin-bottom: 10px;">#${ticket.ticket_id} - ${escapeHtml(ticket.title)}</h2>
+                        <div class="ticket-badges" style="margin-bottom: 10px;">
+                            <span class="ticket-status status-${ticket.status}">${ticket.status.replace('_', ' ')}</span>
+                            <span class="ticket-status priority-${ticket.priority}">${ticket.priority}</span>
+                            <span class="category-badge category-${ticket.category}">${ticket.category}</span>
+                        </div>
+                        <div class="ticket-meta">
+                            Created by ${escapeHtml(ticket.created_by)} on ${formatDate(ticket.created_at)}
+                        </div>
+                        <div class="status-update">
+                            <label style="font-weight: 600;">Status:</label>
+                            <select id="statusSelect" class="" style="width: 200px;">
+                                <option value="open" ${ticket.status === 'open' ? 'selected' : ''}>Open</option>
+                                <option value="in_progress" ${ticket.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="resolved" ${ticket.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                                <option value="closed" ${ticket.status === 'closed' ? 'selected' : ''}>Closed</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="updateTicketStatus('${ticket.ticket_id}')">Update Status</button>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #2d3748; margin-bottom: 15px;">Messages</h3>
+                    <div class="messages-list">
+                        ${ticket.messages.map(msg => `
+                            <div class="message">
+                                <div class="message-header">
+                                    <span class="message-author">${escapeHtml(msg.author)}</span>
+                                    <span class="message-time">${formatDate(msg.created_at)}</span>
+                                </div>
+                                <div class="message-text">${escapeHtml(msg.message_text)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                        <h3 style="color: #2d3748; margin-bottom: 15px;">Add Message</h3>
+                        <div id="messageError" class="error hidden"></div>
+                        <div id="messageSuccess" class="success hidden"></div>
+                        <form id="addMessageForm" onsubmit="addMessage(event, '${ticket.ticket_id}')">
+                            <div class="form-group">
+                                <textarea id="newMessage" rows="3" required placeholder="Type your message here..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </form>
+                    </div>
+                `;
+            } catch (error) {
+                contentDiv.innerHTML = `<p style="color: #c53030;">Error loading ticket: ${error.message}</p>`;
+            }
+        }
+
+        async function addMessage(event, ticketId) {
+            event.preventDefault();
+            
+            const messageText = document.getElementById('newMessage').value.trim();
+            const errorDiv = document.getElementById('messageError');
+            const successDiv = document.getElementById('messageSuccess');
+            
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`/tickets/${ticketId}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: messageText })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to add message');
+                }
+                
+                successDiv.textContent = 'Message added successfully!';
+                successDiv.classList.remove('hidden');
+                
+                // Reload ticket details
+                setTimeout(() => showTicketDetail(ticketId), 1000);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        async function updateTicketStatus(ticketId) {
+            const newStatus = document.getElementById('statusSelect').value;
+            
+            try {
+                const response = await fetch(`/tickets/${ticketId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to update status');
+                }
+                
+                alert('Status updated successfully!');
+                showTicketDetail(ticketId);
+            } catch (error) {
+                alert('Error updating status: ' + error.message);
+            }
+        }
+
+        function showTicketsList() {
+            document.getElementById('ticketDetailSection').classList.add('hidden');
+            document.getElementById('ticketsListSection').classList.remove('hidden');
+            loadTickets();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
