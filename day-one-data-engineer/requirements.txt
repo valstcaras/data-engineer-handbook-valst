@@ -1,0 +1,23 @@
+# Flask web framework
+flask==3.0.0
+gunicorn==21.2.0
+
+# Databricks SDK
+databricks-sdk==0.20.0
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+
+# HTTP requests
+requests==2.31.0
+
+# ML/NLP for embeddings
+sentence-transformers==2.2.2
+torch==2.1.0
+
+# Vector similarity
+numpy==1.24.3
+
+# Environment management
+python-dotenv==1.0.0

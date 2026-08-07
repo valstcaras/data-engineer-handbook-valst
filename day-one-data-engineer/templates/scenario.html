@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario - Day One</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+        header { background: #FF3621; color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        header a { color: white; text-decoration: none; }
+        main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        .scenario-box { background: white; border-radius: 8px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+        .narrative { line-height: 1.8; white-space: pre-wrap; }
+        .narrative strong { color: #FF3621; }
+        .narrative code { background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: 'Monaco', monospace; }
+        .options { margin-top: 1.5rem; }
+        .option-btn { display: block; width: 100%; text-align: left; padding: 1rem; margin: 0.75rem 0; background: white; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .option-btn:hover { border-color: #FF3621; background: #fff5f4; }
+        .feedback { background: #e3f2fd; border-left: 4px solid #1976d2; padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+        .evidence { background: #f5f5f5; padding: 1rem; margin: 1rem 0; border-radius: 6px; }
+        .evidence h4 { margin-bottom: 0.5rem; }
+        .evidence-item { padding: 0.75rem; background: white; margin: 0.5rem 0; border-radius: 4px; }
+        textarea { width: 100%; min-height: 120px; padding: 0.75rem; border: 2px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1rem; }
+        .btn { background: #FF3621; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        .btn:hover { background: #e62e1a; }
+        .progress { background: #e0e0e0; height: 8px; border-radius: 4px; margin: 1rem 0; }
+        .progress-bar { background: #FF3621; height: 100%; border-radius: 4px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/">← Back to Scenarios</a>
+        <h2 id="scenario-title">Loading...</h2>
+    </header>
+    
+    <main>
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <div class="scenario-box" id="scenario-content">
+            <div class="narrative" id="narrative"></div>
+            <div class="options" id="options"></div>
+            <div id="feedback"></div>
+            <div id="evidence"></div>
+        </div>
+    </main>
+
+    <script>
+        const scenarioId = parseInt(window.location.pathname.split('/').pop());
+        let attemptId = null;
+        let currentState = null;
+
+        async function startScenario() {
+            const response = await fetch('/api/attempts/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({scenario_id: scenarioId})
+            });
+            const attempt = await response.json();
+            attemptId = attempt.attempt_id;
+            await loadState();
+        }
+
+        async function loadState() {
+            // In production, call /api/attempts/{attemptId}/state
+            // For now, fetch scenario definition and render first node
+            const response = await fetch(`/api/scenarios/${scenarioId}`);
+            const scenario = await response.json();
+            
+            document.getElementById('scenario-title').textContent = scenario.title;
+            const definition = scenario.definition;
+            const currentNode = definition.nodes[definition.start_node];
+            
+            renderNode(currentNode, definition.start_node);
+        }
+
+        function renderNode(node, nodeId) {
+            document.getElementById('narrative').innerHTML = node.narrative;
+            
+            const optionsDiv = document.getElementById('options');
+            if (node.type === 'decision') {
+                optionsDiv.innerHTML = node.options.map(opt => `
+                    <button class="option-btn" onclick="makeChoice('${nodeId}', '${opt}')">
+                        ${node.option_labels[opt]}
+                    </button>
+                `).join('');
+            } else if (node.type === 'free_text') {
+                optionsDiv.innerHTML = `
+                    <textarea id="free-text-input" placeholder="Type your response..."></textarea>
+                    <button class="btn" onclick="submitFreeText('${nodeId}')" style="margin-top: 1rem;">Submit</button>
+                `;
+            }
+        }
+
+        async function makeChoice(nodeId, option) {
+            // In production: POST /api/attempts/{attemptId}/decisions
+            alert('Choice recorded: ' + option);
+            // Then advance to next node
+        }
+
+        async function submitFreeText(nodeId) {
+            const text = document.getElementById('free-text-input').value;
+            // In production: POST /api/attempts/{attemptId}/decisions
+            alert('Response submitted: ' + text);
+        }
+
+        startScenario();
+    </script>
+</body>
+</html>
