@@ -1,0 +1,11 @@
+command:
+  - "python"
+  - "app.py"
+
+env:
+  - name: LAKEBASE_SECRET_SCOPE
+    value: "day-one"
+  - name: LAKEBASE_SECRET_KEY
+    value: "lakebase-url"
+  - name: PORT
+    value: "5000"

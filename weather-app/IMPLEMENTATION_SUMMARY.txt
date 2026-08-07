@@ -1,0 +1,178 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  WEATHER APP IMPLEMENTATION COMPLETE                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📂 Location: /Users/valeria.s.caras@gmail.com/databricks-lakebase-app-day-2/weather-app/
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PART 1: Data Ingestion (✓ Complete)                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Files Created:
+  • weather_client.py        - NWS API client (alerts, forecasts, grid points)
+  • app.py                   - Flask REST API with /weather/sync endpoint
+  • lakebase.py              - Postgres connection helper
+  • requirements.txt         - Python dependencies
+
+Database Schema:
+  • weather_documents        - Raw alerts + forecasts (narrative_text, location, etc.)
+
+Key Features:
+  ✓ Harvest weather alerts by state from NWS API
+  ✓ Fetch multi-day forecasts by lat/lon (grid resolution)
+  ✓ Normalize documents with stable IDs
+  ✓ Upsert to Lakebase with ON CONFLICT handling
+
+Usage:
+  curl -X POST http://localhost:8080/weather/sync \
+    -H "Content-Type: application/json" \
+    -d '{
+      "locations": [
+        {"label": "Chicago, IL", "lat": 41.88, "lon": -87.63}
+      ],
+      "limit": 50
+    }'
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PART 2: Vector Embeddings (✓ Complete)                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Files Created:
+  • notebooks/ingest_weather_embeddings.py  - Embedding pipeline script
+  • sql/setup_weather_embeddings.sql        - Schema with vector(384) + HNSW index
+
+Database Schema:
+  • weather_embeddings      - Chunked embeddings (document_id, chunk_index, embedding)
+
+Key Features:
+  ✓ Reads unembedded documents via psycopg2
+  ✓ Chunks narrative_text (CHUNK_SIZE=800, CHUNK_OVERLAP=100)
+  ✓ Embeds with sentence-transformers/all-MiniLM-L6-v2 (384-dim)
+  ✓ Batch writes via psycopg2.extras.execute_values
+  ✓ ON CONFLICT handling for idempotency
+  ✓ HNSW index for fast vector search
+
+Usage:
+  python notebooks/ingest_weather_embeddings.py
+
+Environment Variables:
+  • CHUNK_SIZE=800
+  • CHUNK_OVERLAP=100
+  • BATCH_SIZE=100
+  • EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PART 3: Semantic Search (✓ Complete)                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Files Updated:
+  • app.py                   - Added POST /weather/search endpoint
+
+Key Features:
+  ✓ Lazy-loads sentence-transformers model (cached)
+  ✓ Embeds query text using same model (384-dim)
+  ✓ Cosine similarity search via pgvector <=> operator
+  ✓ Returns top_k results (1-20, default 5)
+  ✓ Joins embeddings with documents for full metadata
+  ✓ Handles empty table gracefully
+
+Query Implementation:
+  SELECT d.id, d.location, d.headline, e.chunk_text,
+         1 - (e.embedding <=> '[...]'::vector) AS similarity
+  FROM weather_embeddings e
+  JOIN weather_documents d ON d.id = e.document_id
+  ORDER BY e.embedding <=> '[...]'::vector
+  LIMIT ?
+
+Usage:
+  curl -X POST http://localhost:8080/weather/search \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": "risk of flooding near rivers",
+      "top_k": 5
+    }'
+
+Response Format:
+  {
+    "results": [
+      {
+        "id": "abc123",
+        "location": "Chicago, IL",
+        "source_type": "alert",
+        "headline": "Flood Warning",
+        "chunk_text": "...",
+        "similarity": 0.85,
+        ...
+      }
+    ],
+    "count": 5
+  }
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ DOCUMENTATION (✓ Complete)                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • README.md               - Complete usage guide, API docs, schema reference
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ARCHITECTURE SUMMARY                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Data Flow:
+  1. NWS API → weather_client.py → weather_documents (raw text)
+  2. weather_documents → ingest_weather_embeddings.py → weather_embeddings (vectors)
+  3. User query → app.py (/weather/search) → pgvector search → results
+
+Technology Stack:
+  • Data Source:    NWS API (api.weather.gov) - public, no auth required
+  • Database:       Lakebase Postgres + pgvector extension
+  • Embeddings:     sentence-transformers/all-MiniLM-L6-v2 (384-dim)
+  • Vector Index:   HNSW with cosine distance
+  • API:            Flask REST
+  • Write Path:     psycopg2 (NOT Spark, per requirements)
+
+Vector Search:
+  • Operator:       <=> (cosine distance)
+  • Similarity:     1 - distance (0-1 scale, higher = more similar)
+  • Index:          HNSW(embedding vector_cosine_ops)
+  • Parameters:     m=16, ef_construction=64
+
+Key Design Decisions:
+  1. Same embedding model as ticker-news app (384-dim) for consistency
+  2. Chunking with sliding window to preserve context across boundaries
+  3. psycopg2 for writes (Spark JDBC not supported for Lakebase)
+  4. HNSW index for sub-linear search time (better than IVFFlat for small datasets)
+  5. Separate documents + embeddings tables for flexible schema evolution
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ NEXT STEPS                                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+To deploy and test:
+
+  1. Initialize database:
+     psql <lakebase-url> < sql/setup_weather_embeddings.sql
+
+  2. Sync weather data:
+     curl -X POST http://localhost:8080/weather/sync \
+       -d '{"locations": [...], "limit": 50}'
+
+  3. Generate embeddings:
+     python notebooks/ingest_weather_embeddings.py
+
+  4. Test search:
+     curl -X POST http://localhost:8080/weather/search \
+       -d '{"query": "severe thunderstorms", "top_k": 5}'
+
+Optional enhancements:
+  • Add caching layer (Redis) for popular queries
+  • Implement query rewriting for better search recall
+  • Add filtering by location, severity, or date range
+  • Create web UI for search interface
+  • Schedule embedding pipeline as Databricks Job
+  • Add monitoring/logging (Prometheus, Datadog)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            STATUS: READY TO TEST                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
