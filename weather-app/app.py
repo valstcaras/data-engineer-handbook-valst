@@ -12,7 +12,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 
 # Import local modules
 import lakebase
@@ -183,7 +183,13 @@ def _upsert_weather_batch(documents: list[dict]) -> int:
 
 @app.route("/")
 def index():
-    """Basic health check endpoint."""
+    """Render the main web interface."""
+    return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    """API health check endpoint."""
     return jsonify({
         "service": "Weather Alert & Forecast Vector Search API",
         "status": "running",
@@ -376,9 +382,14 @@ def _search_weather_embeddings(query_embedding: list[float], top_k: int) -> list
 if __name__ == "__main__":
     # Initialize tables on startup
     logger.info("Initializing weather tables...")
-    ensure_weather_table()
-    ensure_weather_embeddings_table()
-    logger.info("Tables ready!")
+    try:
+        ensure_weather_table()
+        ensure_weather_embeddings_table()
+        logger.info("Tables ready!")
+    except Exception as e:
+        logger.warning(f"Could not initialize tables (they may already exist): {e}")
+        logger.info("Continuing with existing tables...")
     
-    # Start Flask app
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    # Start Flask app on port 8000 (Databricks Apps default)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port, debug=False)
