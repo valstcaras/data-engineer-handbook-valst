@@ -3,6 +3,7 @@ Lakebase (Databricks-managed Postgres) connection helper.
 """
 
 import base64
+from decimal import Decimal
 import os
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -22,13 +23,27 @@ def _get_lakebase_url() -> str:
         return url
     
     # Try secret scope
-    scope = os.environ.get("LAKEBASE_SECRET_SCOPE", "day-one")
+    scope = os.environ.get("LAKEBASE_SECRET_SCOPE", "database")
     key = os.environ.get("LAKEBASE_SECRET_KEY", "lakebase-url")
+
     
     w = WorkspaceClient()
     encoded = w.secrets.get_secret(scope=scope, key=key).value
     decoded = base64.b64decode(encoded).decode("utf-8")
     return decoded
+
+
+def _convert_decimals(obj: Any) -> Any:
+    """
+    Recursively convert Decimal objects to float for JSON serialization.
+    """
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {k: _convert_decimals(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_decimals(item) for item in obj]
+    return obj
 
 
 def _get_connection():
@@ -44,7 +59,8 @@ def run_query(sql: str, params: Optional[Tuple] = None) -> List[Dict[str, Any]]:
     with _get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             cursor.execute(sql, params or ())
-            return [dict(row) for row in cursor.fetchall()]
+            results = [dict(row) for row in cursor.fetchall()]
+            return [_convert_decimals(row) for row in results]
 
 
 def run_write(sql: str, params: Optional[Tuple] = None) -> None:

@@ -6,32 +6,34 @@
     <title>Day One: Data Engineer</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
-        header { background: #FF3621; color: white; padding: 2rem; text-align: center; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
+        header { background: white; color: #1a202c; padding: 2rem; text-align: center; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 2rem auto; max-width: 1200px; position: relative; }
         header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        header p { font-size: 1.1rem; opacity: 0.9; }
+        header p { font-size: 1.1rem; color: #666; }
         main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .scenarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
-        .scenario-card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
-        .scenario-card:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .scenario-card h3 { color: #FF3621; margin-bottom: 0.5rem; }
+        .scenario-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid rgba(102, 126, 234, 0.1); }
+        .scenario-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); }
+        .scenario-card h3 { color: #667eea; margin-bottom: 0.5rem; font-size: 1.3rem; }
         .scenario-meta { display: flex; gap: 1rem; font-size: 0.9rem; color: #666; margin: 0.5rem 0; }
         .scenario-meta span { display: flex; align-items: center; gap: 0.3rem; }
-        .difficulty { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; }
-        .difficulty-1 { background: #e3f2fd; color: #1976d2; }
-        .difficulty-2 { background: #fff3e0; color: #f57c00; }
-        .difficulty-3 { background: #fce4ec; color: #c2185b; }
-        .btn { display: inline-block; background: #FF3621; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 500; transition: background 0.2s; }
-        .btn:hover { background: #e62e1a; }
-        .profile-link { position: absolute; top: 1rem; right: 1rem; color: white; text-decoration: none; padding: 0.5rem 1rem; border: 1px solid white; border-radius: 4px; }
-        .profile-link:hover { background: rgba(255,255,255,0.1); }
+        .difficulty { padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+        .difficulty-1 { background: #e0f2fe; color: #0369a1; }
+        .difficulty-2 { background: #dbeafe; color: #1e40af; }
+        .difficulty-3 { background: #e0e7ff; color: #4338ca; }
+        .difficulty-4 { background: #ede9fe; color: #6d28d9; }
+        .difficulty-5 { background: #fae8ff; color: #86198f; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .profile-link { position: absolute; top: 1rem; right: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); }
+        .profile-link:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
     </style>
 </head>
 <body>
     <header>
         <a href="/profile" class="profile-link">📊 My Profile</a>
         <h1>Day One: Data Engineer</h1>
-        <p>Try on different DE roles through interactive scenarios</p>
+        <p>A career try-out simulator where users play through realistic data engineering scenarios, get mentored by an AI agent, and build an evidence-based interest profile.</p>
     </header>
     
     <main>

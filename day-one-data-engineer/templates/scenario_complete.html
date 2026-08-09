@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Complete - Day One</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            padding: 2rem 1rem;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+        .celebration {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .celebration h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .celebration p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        .scenario-title {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 2rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .rating-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .rating-btn {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rating-btn:hover {
+            border-color: #667eea;
+            background: #f0f9ff;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        input[type="radio"]:checked + .rating-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .yes-no-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .yes-no-btn {
+            flex: 1;
+            max-width: 200px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .yes-no-btn:hover {
+            border-color: #667eea;
+            background: #f0f9ff;
+        }
+        input[type="radio"]:checked + .yes-no-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        .help-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="celebration">
+            <h1>🎉 Well Done!</h1>
+            <p>You've completed the scenario</p>
+        </div>
+        
+        <div class="scenario-title">
+            {{ state.scenario.title }}
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value">{{ state.decisions|length }}</div>
+                <div class="stat-label">Decisions Made</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ state.scenario.category.replace('_', ' ').title() }}</div>
+                <div class="stat-label">Category</div>
+            </div>
+        </div>
+        
+        <form method="POST" action="/scenario/{{ state.scenario_id }}/submit_survey">
+            <input type="hidden" name="attempt_id" value="{{ state.attempt_id }}">
+            
+            <div class="form-group">
+                <label>How much did you enjoy this scenario?</label>
+                <div class="rating-group">
+                    {% for i in range(1, 6) %}
+                    <label>
+                        <input type="radio" name="enjoyment_score" value="{{ i }}" required>
+                        <div class="rating-btn">{{ i }}</div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p class="help-text">1 = Not at all, 5 = Loved it!</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Would you like to do this type of work in your day-to-day job?</label>
+                <div class="yes-no-group">
+                    <label>
+                        <input type="radio" name="would_do_as_job" value="yes" required>
+                        <div class="yes-no-btn">👍 Yes</div>
+                    </label>
+                    <label>
+                        <input type="radio" name="would_do_as_job" value="no" required>
+                        <div class="yes-no-btn">👎 No</div>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">Complete & Return Home</button>
+        </form>
+    </div>
+</body>
+</html>

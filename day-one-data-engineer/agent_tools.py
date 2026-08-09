@@ -119,14 +119,52 @@ def search_evidence(
     - score, view_count, tags
     - similarity score
     """
-    # For now, return empty list since we haven't ingested SO data yet
-    # In production, this would:
-    # 1. Embed the query using sentence-transformers
-    # 2. Query Lakebase with pgvector similarity search
-    # 3. Return top k results
+    from sentence_transformers import SentenceTransformer
     
-    # Placeholder implementation
-    return []
+    # Load embedding model (same as used in ingestion)
+    # Cache this in production to avoid reloading
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    
+    # Compute query embedding
+    query_embedding = model.encode([query])[0].tolist()
+    
+    # Search using pgvector cosine similarity
+    # <=> operator is cosine distance (1 - cosine similarity)
+    sql = """
+        SELECT 
+            q.question_id,
+            q.title,
+            q.body,
+            q.tags,
+            q.link as question_url,
+            q.score,
+            q.view_count,
+            q.answer_count,
+            e.text_content,
+            1 - (e.embedding <=> %s::vector) as similarity
+        FROM stackoverflow_embeddings e
+        JOIN stackoverflow_questions q ON e.question_id = q.question_id
+        ORDER BY e.embedding <=> %s::vector
+        LIMIT %s
+    """
+    
+    results = lakebase.run_query(sql, (query_embedding, query_embedding, k))
+    
+    # Parse tags from PostgreSQL array format to Python list
+    for result in results:
+        if result.get('tags'):
+            tags_str = result['tags']
+            # PostgreSQL arrays come as strings like '{python,sql,pandas}'
+            if isinstance(tags_str, str):
+                # Remove curly braces and split by comma
+                tags_str = tags_str.strip('{}')
+                result['tags'] = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+            elif not isinstance(tags_str, list):
+                result['tags'] = []
+        else:
+            result['tags'] = []
+    
+    return results
 
 
 def get_interest_profile(user_id: int) -> Dict[str, Any]:

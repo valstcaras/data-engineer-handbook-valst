@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Day One: Data Engineer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 { 
+            color: #FF3621; 
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #FF3621;
+        }
+        .btn {
+            width: 100%;
+            background: #FF3621;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #e62e1a;
+        }
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Day One: Data Engineer</h1>
+        <p class="subtitle">Try on different DE roles through interactive scenarios</p>
+        
+        <form method="POST" action="/create_user">
+            <div class="form-group">
+                <label for="display_name">Display Name</label>
+                <input 
+                    type="text" 
+                    id="display_name" 
+                    name="display_name" 
+                    required 
+                    placeholder="Enter your name"
+                    maxlength="50"
+                >
+                <p class="help-text">This is how you'll be identified in the app</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="background_tag">Your Background</label>
+                <select id="background_tag" name="background_tag" required>
+                    <option value="student">Student</option>
+                    <option value="software_eng">Software Engineer</option>
+                    <option value="analyst">Analyst</option>
+                    <option value="data_engineer">Data Engineer</option>
+                    <option value="other">Other</option>
+                </select>
+                <p class="help-text">Help us understand your experience level</p>
+            </div>
+            
+            <button type="submit" class="btn">Get Started →</button>
+        </form>
+    </div>
+</body>
+</html>

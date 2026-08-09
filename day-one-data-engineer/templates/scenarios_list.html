@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenarios - Day One: Data Engineer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333; 
+        }
+        header { 
+            background: white; 
+            color: #1a202c; 
+            padding: 2rem; 
+            text-align: center;
+            position: relative;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+        header h1 { 
+            font-size: 2.5rem; 
+            margin-bottom: 0.5rem; 
+        }
+        header p { 
+            font-size: 1.1rem; 
+            opacity: 0.9; 
+        }
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        main { 
+            max-width: 1200px; 
+            margin: 2rem auto; 
+            padding: 0 1rem 2rem; 
+        }
+        .scenarios-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 1.5rem; 
+        }
+        .scenario-card { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            transition: transform 0.2s; 
+        }
+        .scenario-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        }
+        .scenario-card h3 { 
+            color: #667eea; 
+            margin-bottom: 0.5rem; 
+            font-size: 1.3rem;
+        }
+        .scenario-meta { 
+            display: flex; 
+            gap: 1rem; 
+            font-size: 0.9rem; 
+            color: #666; 
+            margin: 0.5rem 0; 
+            flex-wrap: wrap;
+        }
+        .scenario-meta span { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.3rem; 
+        }
+        .difficulty { 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 6px; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+        }
+        .difficulty-1 { background: #e0f2fe; color: #0369a1; }
+        .difficulty-2 { background: #dbeafe; color: #1e40af; }
+        .difficulty-3 { background: #e0e7ff; color: #4338ca; }
+        .difficulty-4 { background: #ede9fe; color: #6d28d9; }
+        .difficulty-5 { background: #fae8ff; color: #86198f; }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 1rem 0;
+        }
+        .status-new { background: #f0f9ff; color: #0369a1; }
+        .status-progress { background: #ede9fe; color: #6d28d9; }
+        .status-completed { background: #d1fae5; color: #047857; }
+        .btn { 
+            display: inline-block; 
+            background: #FF3621; 
+            color: white; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 6px; 
+            text-decoration: none; 
+            font-weight: 500; 
+            transition: background 0.2s; 
+            text-align: center;
+        }
+        .btn:hover { 
+            background: #e62e1a; 
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        .empty-state h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="user-info">
+            👋 {{ user.display_name }}
+        </div>
+        <h1>Day One: Data Engineer</h1>
+        <p>A career try-out simulator where users play through realistic data engineering scenarios, get mentored by an AI agent, and build an evidence-based interest profile.</p>
+    </header>
+    
+    <div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+        <a href="/search" style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+            🔍 Search Stack Overflow Scenarios
+        </a>
+        <p style="color: #666; margin-top: 0.5rem; font-size: 0.9rem;">Semantic search powered by embeddings: "debugging data quality issues", "handling data skew", etc.</p>
+    </div>
+    
+    <main>
+        {% if scenarios %}
+        <div class="scenarios-grid">
+            {% for scenario in scenarios %}
+            <div class="scenario-card">
+                <h3>{{ scenario.title }}</h3>
+                <div class="scenario-meta">
+                    <span class="difficulty difficulty-{{ scenario.difficulty }}">
+                        Level {{ scenario.difficulty }}
+                    </span>
+                    <span>⏱️ {{ scenario.est_minutes }} min</span>
+                    <span>📁 {{ scenario.category.replace('_', ' ').title() }}</span>
+                </div>
+                
+                {% if scenario.completed_count > 0 %}
+                <div class="status-badge status-completed">
+                    ✅ Completed
+                </div>
+                {% elif scenario.in_progress_count > 0 %}
+                <div class="status-badge status-progress">
+                    🔄 In Progress
+                </div>
+                {% else %}
+                <div class="status-badge status-new">
+                    🆕 New
+                </div>
+                {% endif %}
+                
+                <a href="/scenario/{{ scenario.scenario_id }}" class="btn">
+                    {% if scenario.in_progress_count > 0 %}
+                        Continue Scenario
+                    {% else %}
+                        Start Scenario
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h2>No scenarios available yet</h2>
+            <p>Check back soon for new scenarios!</p>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

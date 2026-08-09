@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ state.scenario.title }} - Day One</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333; 
+        }
+        header { 
+            background: white; 
+            color: #1a202c; 
+            padding: 1.5rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin: 2rem auto;
+            max-width: 900px;
+        }
+        header a { 
+            color: white; 
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        header h2 {
+            font-size: 1.5rem;
+        }
+        main { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 0 1rem 2rem; 
+        }
+        .scenario-box { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 2rem; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(102, 126, 234, 0.1); 
+        }
+        .narrative { 
+            line-height: 1.8; 
+            white-space: pre-wrap; 
+            margin-bottom: 2rem;
+        }
+        .narrative strong { 
+            color: #667eea; 
+            font-weight: 700;
+        }
+        .narrative code,
+        .narrative pre { 
+            background: #f5f5f5; 
+            padding: 0.2rem 0.4rem; 
+            border-radius: 3px; 
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .options { 
+            margin-top: 2rem; 
+        }
+        .option-label {
+            display: block;
+            padding: 1rem 1.25rem;
+            margin: 0.75rem 0;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .option-label:hover {
+            border-color: #FF3621;
+            background: #fff5f4;
+        }
+        input[type="radio"] {
+            margin-right: 0.75rem;
+            transform: scale(1.2);
+        }
+        textarea { 
+            width: 100%; 
+            min-height: 150px; 
+            padding: 1rem; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            font-family: inherit; 
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #FF3621;
+        }
+        .btn { 
+            background: #FF3621; 
+            color: white; 
+            padding: 1rem 2rem; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn:hover { 
+            background: #e62e1a; 
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .feedback-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: #FF3621;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .previous-decisions {
+            margin-bottom: 2rem;
+        }
+        .decision-item {
+            background: #f5f5f5;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 6px;
+            border-left: 3px solid #FF3621;
+        }
+        .decision-feedback {
+            font-style: italic;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        .help-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* AI Mentor Chat */
+        .chat-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        .chat-panel h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        #chat-box {
+            height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        .chat-msg {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .chat-msg.user { background: #e3f2fd; text-align: right; }
+        .chat-msg.agent { background: #f5f5f5; }
+        .chat-msg.error { background: #ffebee; color: #c62828; }
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-controls input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+        .chat-controls button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #typing { display: none; padding: 8px; color: #666; font-style: italic; }
+        #typing.show { display: block; }
+        
+        /* AI Chat Styles */
+        .agent-chat-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-top: 2rem;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        #chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            margin: 1rem 0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            line-height: 1.5;
+        }
+        .message.user {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .message.agent {
+            background: #f5f5f5;
+        }
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .chat-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .typing-indicator {
+            display: none;
+            padding: 8px;
+            color: #666;
+            font-style: italic;
+        }
+        .typing-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/">← Back to Scenarios</a>
+        <h2>{{ state.scenario.title }}</h2>
+        <span>{{ user.display_name }}</span>
+    </header>
+    
+    <main>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: {{ (state.decisions|length / 4 * 100)|int }}%"></div>
+        </div>
+        
+        {% if state.decisions %}
+        <div class="previous-decisions">
+            <h3 style="margin-bottom: 1rem; color: #666;">Previous Decisions:</h3>
+            {% for decision in state.decisions[-2:] %}
+            <div class="decision-item">
+                <strong>Choice:</strong> {{ decision.chosen_option }}
+                {% if decision.agent_feedback %}
+                <div class="decision-feedback">{{ decision.agent_feedback }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <a href="/" style="display: inline-block; background: white; color: #667eea; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; border: 2px solid #667eea; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#667eea';">
+                ← Return to Main Page
+            </a>
+        </div>
+        
+        <div class="scenario-box">
+            <div class="narrative">{{ state.current_node.narrative | safe }}</div>
+            
+            <form method="POST" action="/scenario/{{ state.scenario_id }}/decide" id="decision-form">
+                <input type="hidden" name="node_id" value="{{ state.current_node_id }}">
+                
+                {% if state.current_node.type == 'decision' %}
+                <div class="options">
+                    <h3 style="margin-bottom: 1rem;">Choose your approach:</h3>
+                    {% for option in state.current_node.options %}
+                    <label class="option-label">
+                        <input 
+                            type="radio" 
+                            name="chosen_option" 
+                            value="{{ option }}"
+                            required
+                        >
+                        {{ state.current_node.option_labels[option] }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn" style="margin-top: 1.5rem;">Submit Decision</button>
+                
+                {% elif state.current_node.type == 'free_text' %}
+                <div class="options">
+                    <h3 style="margin-bottom: 1rem;">Your Response:</h3>
+                    <textarea 
+                        name="free_text_answer" 
+                        placeholder="Type your response here..."
+                        required
+                    ></textarea>
+                    <p class="help-text">Take your time to explain your reasoning</p>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 1.5rem;">Submit Response</button>
+                {% endif %}
+            </form>
+        </div>
+        
+        <!-- AI Mentor Chat -->
+        <div class="chat-panel">
+            <h3>🤖 AI Mentor</h3>
+            <div id="chat-box"></div>
+            <div id="typing">Thinking...</div>
+            <div class="chat-controls">
+                <input type="text" id="chat-in" placeholder="Ask for help...">
+                <button onclick="send()">Send</button>
+            </div>
+            <p class="help-text">💡 Try: "What should I consider?"</p>
+        </div>
+    </main>
+    
+    <script>
+    let convId = null;
+    
+    function addMsg(type, text) {
+        const box = document.getElementById('chat-box');
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg ' + type;
+        msg.innerHTML = (type === 'user' ? '<b>You:</b> ' : type === 'agent' ? '<b>🤖:</b> ' : '<b>⚠️:</b> ') + text;
+        box.appendChild(msg);
+        box.scrollTop = box.scrollHeight;
+    }
+    
+    function send() {
+        const input = document.getElementById('chat-in');
+        const msg = input.value.trim();
+        if (!msg) return;
+        
+        console.log('Sending:', msg);
+        addMsg('user', msg);
+        input.value = '';
+        
+        document.getElementById('typing').classList.add('show');
+        
+        fetch('/agent/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: msg,
+                user_id: '{{ user.user_id }}',
+                attempt_id: '{{ state.attempt_id }}',
+                conversation_id: convId
+            })
+        })
+        .then(r => {
+            console.log('Status:', r.status);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(data => {
+            document.getElementById('typing').classList.remove('show');
+            if (data.error) {
+                addMsg('error', data.error);
+            } else {
+                convId = data.conversation_id;
+                addMsg('agent', data.response);
+                if (data.tool_calls) console.log('Tools:', data.tool_calls);
+            }
+        })
+        .catch(err => {
+            document.getElementById('typing').classList.remove('show');
+            addMsg('error', err.message + '. Check console.');
+            console.error('Error:', err);
+        });
+    }
+    
+    document.getElementById('chat-in').addEventListener('keypress', e => {
+        if (e.key === 'Enter') send();
+    });
+    
+    window.addEventListener('load', () => {
+        addMsg('agent', 'Hi! I can help with this scenario.');
+    });
+    </script>
+</body>
+</html>
+</html>

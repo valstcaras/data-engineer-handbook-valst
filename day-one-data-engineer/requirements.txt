@@ -2,8 +2,8 @@
 flask==3.0.0
 gunicorn==21.2.0
 
-# Databricks SDK
-databricks-sdk==0.20.0
+# Databricks SDK (>= 0.118.0 required for Lakebase Postgres)
+databricks-sdk>=0.118.0
 
 # Database
 psycopg2-binary==2.9.9
@@ -13,11 +13,14 @@ sqlalchemy==2.0.23
 requests==2.31.0
 
 # ML/NLP for embeddings
-sentence-transformers==2.2.2
-torch==2.1.0
+sentence-transformers>=2.3.1
+torch>=2.1.2
 
 # Vector similarity
 numpy==1.24.3
 
 # Environment management
 python-dotenv==1.0.0
+
+# AI Agent - Using Databricks Foundation Models (no extra LLM packages needed!)
+# Databricks SDK already included above (>= 0.118.0)

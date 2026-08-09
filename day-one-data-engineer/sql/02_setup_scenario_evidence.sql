@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Scenario evidence table with embeddings
 CREATE TABLE IF NOT EXISTS scenario_evidence (
-    evidence_id SERIAL PRIMARY KEY,
+    evidence_id TEXT PRIMARY KEY,
     question_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     body TEXT NOT NULL,
@@ -39,7 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_evidence_question_id ON scenario_evidence (questi
 
 -- Optional: skill market signals table (for tracking SO tag trends over time)
 CREATE TABLE IF NOT EXISTS skill_market_signals (
-    signal_id SERIAL PRIMARY KEY,
+    signal_id TEXT PRIMARY KEY,
     tag TEXT NOT NULL,
     month DATE NOT NULL,
     question_count INTEGER NOT NULL,

@@ -10,7 +10,15 @@ This app meets all five core requirements:
 2. **Third-Party API Integration**: Stack Overflow API for real-world evidence retrieval  
 3. **Unstructured Data Processing**: Question bodies → semantic embeddings for RAG
 4. **Databricks App with Frontend**: Interactive scenario player with decision trees
-5. **AI Agent with Tools**: Agent that guides scenarios, scores decisions, searches evidence, updates profiles, and recommends resources
+5. **AI Agent with Tools**: Fully autonomous agent using Databricks Foundation Models that guides scenarios, scores decisions, searches evidence, updates profiles, and recommends resources
+
+### Key Features ✨
+
+* **🤖 AI Agent Integration** - Built-in conversational AI mentor powered by Databricks Foundation Models (Llama 3.1 70B)
+* **🔍 Semantic Search** - Natural language search over Stack Overflow using pgvector similarity
+* **🎯 Interactive Scenarios** - Play through 5 realistic data engineering situations
+* **📊 Interest Profiling** - Evidence-based career fit assessment through competence + enjoyment signals
+* **🚀 Production Ready** - Deployable as Databricks App with Lakebase Postgres backend
 
 ## Architecture
 
@@ -25,6 +33,7 @@ This app meets all five core requirements:
 - `user_skill_signals` - Competence and enjoyment signals per skill
 - `interest_profiles` - Rolling aggregate profiles per category
 - `learning_recommendations` - Personalized next steps
+- `agent_conversations` - Persistent AI agent conversation history (JSONB)
 
 **Evidence Tables:**
 - `scenario_evidence` - Stack Overflow content with pgvector embeddings
@@ -74,13 +83,20 @@ day-one-data-engineer/
 ├── sql/
 │   ├── 01_setup_core_tables.sql       # Lakebase schema
 │   ├── 02_setup_scenario_evidence.sql # pgvector table
-│   └── 03_seed_scenarios.sql          # Initial scenario data
+│   ├── 03_setup_stack_overflow.sql    # Stack Overflow tables
+│   └── 04_setup_agent_conversations.sql # AI agent conversation storage
 ├── notebooks/
-│   └── ingest_stackoverflow.py        # Spark ETL for SO data
+│   └── ingest_stackoverflow_questions # Spark ETL for SO data (notebook)
 ├── templates/
 │   ├── index.html                     # Landing page
-│   ├── scenario.html                  # Scenario player
-│   └── profile.html                   # Interest profile view
+│   ├── scenarios_list.html            # Scenario catalog
+│   ├── scenario_play.html             # Scenario player with AI chat
+│   ├── scenario_complete.html         # Completion survey
+│   ├── scenario.html                  # Legacy scenario template
+│   ├── profile.html                   # Interest profile view
+│   ├── search.html                    # Semantic search UI
+│   ├── test_chat.html                 # AI agent test page
+│   └── create_user.html               # User creation form
 ├── resources/
 │   └── stackoverflow_ingestion_job.yml # DAB config
 ├── app.py                             # Flask app + agent
@@ -162,7 +178,7 @@ cd day-one-data-engineer
 pip install -r requirements.txt
 python app.py
 ```
-Open http://localhost:5000
+Open https://data-engineer-app-7474648794140478.aws.databricksapps.com
 
 **Option B: Databricks App**
 1. Create a Git folder in Databricks pointing to this repo
@@ -178,7 +194,79 @@ If using Databricks Asset Bundles:
 databricks bundle deploy -t dev
 ```
 
-This schedules `ingest_stackoverflow.py` to run daily.
+This schedules the `ingest_stackoverflow_questions` notebook to run daily.
+
+## AI Agent Integration
+
+This app features a **fully integrated AI agent** powered by Databricks Foundation Models:
+
+* **No API keys required** - Uses workspace authentication
+* **Autonomous tool calling** - Agent decides which tools to call based on context
+* **Conversational mentorship** - Guides users through scenarios with natural dialogue
+* **Evidence-based feedback** - Retrieves relevant Stack Overflow examples via semantic search
+* **Profile-aware recommendations** - Personalizes based on user progress and preferences
+
+### Agent Architecture
+
+```
+User Browser → Flask App → Agent Runner → Databricks Foundation Model (Llama 3.1 70B)
+                                    │
+                                    ↳── Tool Execution → Agent Tools → Lakebase DB
+                                    │
+                                    ↳── Semantic Search → pgvector
+```
+
+**Available Models:**
+- `databricks-meta-llama-3-1-70b-instruct` (default, best for tool calling)
+- `databricks-meta-llama-3-1-405b-instruct` (most capable, slower)
+- `databricks-dbrx-instruct` (good balance)
+- `databricks-mixtral-8x7b-instruct` (fastest)
+
+**Agent Endpoints:**
+- `POST /agent/chat` - General conversational agent chat
+- `POST /agent/help` - Get contextual help for current scenario
+- `POST /agent/evaluate-answer` - AI evaluation of free-text responses
+- `POST /agent/recommend` - Get personalized learning recommendations
+- `GET /test-chat` - Test page for agent integration
+
+See [AGENT_SETUP.md](AGENT_SETUP.md) for complete technical documentation and [DEPLOY_APP.md](DEPLOY_APP.md) for deployment troubleshooting.
+
+## Testing
+
+### Test the AI Agent
+
+**Option 1: Web UI Test Page**
+1. Deploy your app (see step 5 above)
+2. Visit `https://your-app-url/test-chat`
+3. Click "Test Endpoint" to verify the agent is working
+
+**Option 2: Unit Tests**
+```python
+# Run agent tests
+python test_agent.py
+
+# Direct agent testing
+python test_agent_direct.py
+```
+
+**Option 3: Interactive Testing**
+```python
+import agent_runner
+
+# Test individual tool
+results = agent_runner.execute_tool(
+    "search_evidence",
+    {"query": "spark join optimization", "k": 3}
+)
+
+# Test full agent conversation
+agent = agent_runner.ScenarioAgent()
+response = agent.run(
+    user_message="How do I optimize a slow Spark join?",
+    context={"user_id": 1}
+)
+print(response["response"])
+```
 
 ## How It Works
 
@@ -218,6 +306,32 @@ This schedules `ingest_stackoverflow.py` to run daily.
 - **Profile-aware** - Personalizes tone based on progress
 - **Verdict after ≥3 scenarios** - No premature judgments
 
+### 4. Semantic Search Feature
+
+The app includes a powerful semantic search feature that lets you explore Stack Overflow questions using natural language queries:
+
+- **How it works:**
+  1. Questions from the ingestion notebook are stored in Lakebase with pgvector embeddings
+  2. User queries are embedded using the same sentence-transformers model
+  3. pgvector performs cosine similarity search to find the most relevant questions
+  4. Results are ranked by similarity score and displayed with metadata (votes, views, tags)
+
+- **Example queries:**
+  - "debugging data quality issues"
+  - "handling data skew in Spark"
+  - "optimizing slow ETL pipelines"
+  - "PySpark performance tuning"
+  - "incremental data processing patterns"
+
+- **Technical stack:**
+  - `sentence-transformers/all-MiniLM-L6-v2` for embeddings (384 dimensions)
+  - pgvector extension for efficient vector similarity search
+  - Cosine distance operator (`<=>`) for ranking
+
+- **Access:**
+  - UI: Click "Search Stack Overflow Scenarios" on the home page or navigate to `/search`
+  - API: POST to `/api/search` with JSON `{"query": "your question", "k": 10}`
+
 ## API Endpoints
 
 - `GET /` - Landing page
@@ -229,7 +343,15 @@ This schedules `ingest_stackoverflow.py` to run daily.
 - `POST /attempts/<id>/complete` - Finish attempt with survey
 - `GET /profile/<user_id>` - Get interest profile
 - `GET /profile/<user_id>/recommendations` - Get learning recommendations
-- `POST /evidence/search` - Semantic search over SO content
+- `GET /search?q=<query>` - Semantic search UI over Stack Overflow questions
+- `POST /api/search` - Semantic search API endpoint (JSON)
+- `POST /agent/chat` - AI agent chat endpoint
+- `POST /agent/help` - Get contextual help from AI agent
+- `POST /agent/evaluate-answer` - AI evaluation of free-text answers
+- `POST /agent/recommend` - Get personalized recommendations
+- `GET /agent/conversations?user_id=<id>` - List user's conversation history
+- `GET /agent/conversation/<id>` - Get full conversation details
+- `GET /test-chat` - Test page for AI agent integration
 
 ## Development Roadmap
 

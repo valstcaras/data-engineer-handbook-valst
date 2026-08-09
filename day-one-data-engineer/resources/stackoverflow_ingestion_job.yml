@@ -1,41 +1,20 @@
 resources:
   jobs:
-    stackoverflow_ingestion:
-      name: "[${bundle.target}] Stack Overflow Ingestion"
-      
-      schedule:
-        quartz_cron_expression: "0 0 2 ? * MON"  # Every Monday at 2 AM
-        timezone_id: "UTC"
-        pause_status: "UNPAUSED"
-      
-      tasks:
-        - task_key: ingest_stackoverflow
-          notebook_task:
-            notebook_path: ../notebooks/ingest_stackoverflow
-            source: WORKSPACE
-          
-          new_cluster:
-            spark_version: "14.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 2
-            spark_conf:
-              "spark.databricks.cluster.profile": "serverless"
-            custom_tags:
-              project: "day-one-data-engineer"
-          
-          libraries:
-            - pypi:
-                package: "sentence-transformers==2.2.2"
-            - pypi:
-                package: "psycopg2-binary==2.9.9"
-          
-          timeout_seconds: 3600
-          max_retries: 2
-      
+    stackoverflow_ingestion_job:
+      name: stackoverflow_ingestion_job
       email_notifications:
         on_failure:
-          - ${var.notification_email}
-      
-      tags:
-        project: "day-one-data-engineer"
-        component: "data-ingestion"
+          - valeria.s.caras@gmail.com
+      trigger:
+        pause_status: PAUSED
+        periodic:
+          interval: 1
+          unit: DAYS
+      tasks:
+        - task_key: stackoverflow_ingestion
+          notebook_task:
+            notebook_path: /Workspace/Users/valeria.s.caras@gmail.com/data-engineer-handbook-valst/day-one-data-engineer/notebooks/ingest_stackoverflow_questions
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
